@@ -38,7 +38,12 @@ wordpress_install_site() {
     local wp_admin_pass
     wp_admin_pass=$(generate_password)
 
-    local wp_url="http://${domain}"
+    local wp_url
+    if [[ "${BEHIND_PROXY:-false}" == "true" ]]; then
+        wp_url="https://${domain}"
+    else
+        wp_url="http://${domain}"
+    fi
 
     log_info "Downloading WordPress to ${web_root}..."
     wp core download \
@@ -69,6 +74,23 @@ wordpress_install_site() {
     # Disable file editing from WP admin (security)
     wp config set DISALLOW_FILE_EDIT true --raw \
         --path="${web_root}" --allow-root --quiet
+
+    # Behind a TLS-terminating proxy (e.g. Cloudflare Tunnel): inject a shim
+    # so WordPress sees HTTPS and avoids redirect loops.
+    if [[ "${BEHIND_PROXY:-false}" == "true" ]]; then
+        log_info "Injecting X-Forwarded-Proto shim into wp-config.php..."
+        local shim
+        shim="$(cat <<'PHPSHIM'
+/** X-Forwarded-Proto shim — transparently handles HTTPS behind a reverse proxy */
+if ( isset( \$_SERVER['HTTP_X_FORWARDED_PROTO'] ) && 'https' === \$_SERVER['HTTP_X_FORWARDED_PROTO'] ) {
+    \$_SERVER['HTTPS'] = 'on';
+}
+PHPSHIM
+)"
+        # Insert shim before the "stop editing" sentinel
+        sed -i "s|/\* That's all, stop editing!|${shim}\n\n/* That's all, stop editing!|" \
+            "${web_root}/wp-config.php"
+    fi
 
     log_info "Running WordPress install..."
     wp core install \
