@@ -166,7 +166,7 @@ service_status() {
 # =============================================================================
 
 generate_password() {
-    tr -dc 'A-Za-z0-9!@#%^&*' < /dev/urandom | head -c 24
+    tr -dc 'A-Za-z0-9!@#%^&*' < /dev/urandom | head -c 24; true;
 }
 
 sanitize_domain() {
