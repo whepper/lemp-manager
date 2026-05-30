@@ -114,10 +114,12 @@ php_switch() {
 
     local available_pkgs=()
     for pkg in "${new_pkgs[@]}"; do
-        if apt-cache show "${pkg}" &>/dev/null 2>&1; then
+        local candidate
+        candidate=$(apt-cache policy "${pkg}" 2>/dev/null | awk '/Candidate:/{print $2}')
+        if [[ -n "${candidate}" && "${candidate}" != "(none)" ]]; then
             available_pkgs+=("${pkg}")
         else
-            log_warn "Package not available, skipping: ${pkg}"
+            log_warn "Package not installable, skipping: ${pkg}"
         fi
     done
     pkg_install "${available_pkgs[@]}"
