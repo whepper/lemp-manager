@@ -47,6 +47,10 @@ sudo ./lemp.sh site ssl example.com
 8. Installs and enables **Redis Object Cache** plugin
 9. Prints credentials (admin pass, DB pass) — save these!
 
+> If `BEHIND_PROXY="true"` in `lemp.conf`, the site URL is set to `https://` and an
+> X-Forwarded-Proto → HTTPS shim is written into `wp-config.php` so WordPress works
+> correctly behind a Cloudflare Tunnel or other TLS-terminating reverse proxy.
+
 ## Modules
 
 | Module | Package(s) | Notes |
@@ -63,8 +67,12 @@ sudo ./lemp.sh site ssl example.com
 Edit `lemp.conf`:
 
 ```bash
-PHP_VERSION="8.3"    # 8.2 | 8.3 | 8.4 (via Sury repo)
-WEB_ROOT="/var/www"  # base path for all sites
+PHP_VERSION="8.3"      # 8.2 | 8.3 | 8.4 (via Sury repo)
+WEB_ROOT="/var/www"    # base path for all sites
+BEHIND_PROXY="false"   # set to "true" when a reverse proxy (e.g. Cloudflare Tunnel)
+                       # terminates TLS upstream — installs WordPress with https://
+                       # URLs and injects an X-Forwarded-Proto shim into wp-config.php
+                       # to prevent redirect loops
 ```
 
 ## Architecture
