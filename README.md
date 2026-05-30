@@ -62,6 +62,20 @@ sudo ./lemp.sh site ssl example.com
 | `certbot` | certbot + nginx plugin | Auto-renewal via systemd timer |
 | `firewall` | ufw + fail2ban | Ports 22/80/443; WP login brute force jail |
 
+## PHP commands
+
+| Command | Description |
+|---|---|
+| `./lemp.sh php switch 8.4` | Switch active PHP-FPM version |
+
+`php switch` will:
+1. Detect all `php<old>-*` packages and install their `php<new>-*` equivalents
+2. Apply lemp-manager PHP/OPcache tuning for the new version
+3. Rewrite every vhost in `/etc/nginx/sites-available/` to use the new FPM socket
+4. Update `PHP_VERSION` in `lemp.conf`
+5. Test and reload nginx
+6. Optionally stop and disable the old PHP-FPM service
+
 ## Configuration
 
 Edit `lemp.conf`:

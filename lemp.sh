@@ -135,6 +135,32 @@ cmd_site() {
     esac
 }
 
+cmd_php() {
+    local subcommand="${1:-help}"
+    shift || true
+
+    load_module "php"
+
+    case "${subcommand}" in
+        switch)
+            require_root
+            if [[ -z "${1:-}" ]]; then
+                log_error "Usage: ./lemp.sh php switch <version>"
+                exit 1
+            fi
+            php_switch "$1"
+            ;;
+        *)
+            echo ""
+            echo "Usage: ./lemp.sh php <subcommand>"
+            echo ""
+            echo "Subcommands:"
+            echo "  switch <version>   Switch the active PHP-FPM version (e.g. 8.4)"
+            echo ""
+            ;;
+    esac
+}
+
 cmd_config() {
     print_header "Current Configuration"
     cat <<EOF
@@ -173,6 +199,11 @@ Site commands:
   site ssl    <domain>   Provision Let's Encrypt SSL
   site info   <domain>   Show site details
 
+PHP commands:
+  php switch <version>   Switch active PHP-FPM version (e.g. 8.4)
+                         Mirrors installed extensions, rewrites all nginx
+                         vhosts, updates lemp.conf, reloads nginx.
+
 Modules:
   nginx, mariadb, php, redis, certbot, firewall
 
@@ -182,6 +213,7 @@ Examples:
   ./lemp.sh site ssl example.com
   ./lemp.sh site list
   ./lemp.sh upgrade php
+  ./lemp.sh php switch 8.4
 
 EOF
 }
@@ -202,6 +234,7 @@ main() {
         upgrade)        cmd_upgrade "$@"  ;;
         status)         cmd_status        ;;
         site)           cmd_site "$@"     ;;
+        php)            cmd_php "$@"      ;;
         config)         cmd_config        ;;
         help|--help|-h) cmd_help          ;;
         *)

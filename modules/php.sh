@@ -73,6 +73,116 @@ module_status_php() {
 }
 
 # =============================================================================
+# php switch
+# =============================================================================
+
+php_switch() {
+    local new_version="$1"
+    local old_version="${PHP_VERSION}"
+
+    if [[ ! "${new_version}" =~ ^[0-9]+\.[0-9]+$ ]]; then
+        log_error "Invalid PHP version '${new_version}'. Expected format: 8.3"
+        exit 1
+    fi
+
+    if [[ "${new_version}" == "${old_version}" ]]; then
+        log_warn "PHP ${new_version} is already the active version — nothing to do."
+        exit 0
+    fi
+
+    log_info "Switching PHP ${old_version} → ${new_version}..."
+
+    # 1. Mirror installed packages from old version
+    log_info "Detecting installed packages for PHP ${old_version}..."
+    local old_pkgs new_pkgs=()
+    mapfile -t old_pkgs < <(dpkg-query -W -f='${Package}\n' "php${old_version}-*" 2>/dev/null | sort -u)
+
+    if [[ ${#old_pkgs[@]} -eq 0 ]]; then
+        log_warn "No packages found for PHP ${old_version} — using default extension list."
+        for pkg in "${PHP_EXTENSIONS[@]}"; do
+            new_pkgs+=("${pkg/${old_version}/${new_version}}")
+        done
+    else
+        for pkg in "${old_pkgs[@]}"; do
+            new_pkgs+=("${pkg/${old_version}/${new_version}}")
+        done
+    fi
+
+    # 2. Install new version (skip packages that don't exist in the repo)
+    _php_add_sury_repo
+    apt-get update -qq
+
+    local available_pkgs=()
+    for pkg in "${new_pkgs[@]}"; do
+        if apt-cache show "${pkg}" &>/dev/null 2>&1; then
+            available_pkgs+=("${pkg}")
+        else
+            log_warn "Package not available, skipping: ${pkg}"
+        fi
+    done
+    pkg_install "${available_pkgs[@]}"
+
+    # 3. Enable and start new FPM before configuring so the service unit exists
+    log_info "Enabling php${new_version}-fpm..."
+    service_enable_start "php${new_version}-fpm"
+
+    # 4. Apply lemp-manager PHP tuning for the new version
+    PHP_VERSION="${new_version}"
+    _php_configure
+
+    # 5. Rewrite nginx vhosts
+    local vhosts_dir="/etc/nginx/sites-available"
+    local vhost_count=0
+    if [[ -d "${vhosts_dir}" ]]; then
+        while IFS= read -r -d '' vhost; do
+            if grep -q "php${old_version}-fpm\.sock" "${vhost}"; then
+                sed -i "s|php${old_version}-fpm\.sock|php${new_version}-fpm.sock|g" "${vhost}"
+                log_info "Updated vhost: $(basename "${vhost}")"
+                vhost_count=$((vhost_count + 1))
+            fi
+        done < <(find "${vhosts_dir}" -maxdepth 1 -type f -print0)
+    fi
+
+    # 6. Persist new version to lemp.conf
+    log_info "Updating PHP_VERSION in ${CONFIG_FILE}..."
+    sed -i "s|^PHP_VERSION=.*|PHP_VERSION=\"${new_version}\"|" "${CONFIG_FILE}"
+
+    # 7. Test nginx and reload
+    log_info "Testing nginx configuration..."
+    if nginx -t 2>/dev/null; then
+        service_reload nginx
+        log_success "Nginx reloaded."
+    else
+        log_error "Nginx config test failed — FPM is running but nginx was NOT reloaded."
+        log_error "Fix /etc/nginx/sites-available/ manually then run: nginx -t && systemctl reload nginx"
+        exit 1
+    fi
+
+    # 8. Optionally stop old FPM
+    if confirm "Stop and disable php${old_version}-fpm?"; then
+        systemctl stop    "php${old_version}-fpm" 2>/dev/null || true
+        systemctl disable "php${old_version}-fpm" 2>/dev/null || true
+        log_info "php${old_version}-fpm stopped and disabled."
+    else
+        log_info "php${old_version}-fpm left running."
+    fi
+
+    # 9. Summary
+    echo ""
+    log_success "============================================="
+    log_success " PHP switch complete: ${old_version} → ${new_version}"
+    log_success "============================================="
+    echo ""
+    echo "  Previous version : ${old_version}"
+    echo "  Active version   : ${new_version}"
+    echo "  Vhosts updated   : ${vhost_count}"
+    echo "  FPM socket       : /run/php/php${new_version}-fpm.sock"
+    echo "  PHP config dir   : /etc/php/${new_version}/"
+    echo "  lemp.conf        : PHP_VERSION=\"${new_version}\""
+    echo ""
+}
+
+# =============================================================================
 # Internal helpers
 # =============================================================================
 
