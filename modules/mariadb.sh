@@ -77,7 +77,7 @@ mariadb_create_site_db() {
 
     mariadb -u root <<SQL
 CREATE DATABASE IF NOT EXISTS \`${db_name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS '${db_user}'@'localhost' IDENTIFIED BY '${db_pass}';
+CREATE OR REPLACE USER '${db_user}'@'localhost' IDENTIFIED BY '${db_pass}';
 GRANT ALL PRIVILEGES ON \`${db_name}\`.* TO '${db_user}'@'localhost';
 FLUSH PRIVILEGES;
 SQL
