@@ -222,17 +222,8 @@ nginx_remove_vhost() {
 _nginx_write_global_conf() {
     cat > /etc/nginx/conf.d/lemp-manager.conf <<'EOF'
 # lemp-manager global tuning
-
-# Performance
-sendfile            on;
-tcp_nopush          on;
 tcp_nodelay         on;
 keepalive_timeout   65;
-types_hash_max_size 2048;
-server_tokens       off;
-
-# Gzip
-gzip              on;
 gzip_vary         on;
 gzip_proxied      any;
 gzip_comp_level   6;
