@@ -79,17 +79,22 @@ wordpress_install_site() {
     # so WordPress sees HTTPS and avoids redirect loops.
     if [[ "${BEHIND_PROXY:-false}" == "true" ]]; then
         log_info "Injecting X-Forwarded-Proto shim into wp-config.php..."
-        local shim
-        shim="$(cat <<'PHPSHIM'
-/** X-Forwarded-Proto shim — transparently handles HTTPS behind a reverse proxy */
-if ( isset( \$_SERVER['HTTP_X_FORWARDED_PROTO'] ) && 'https' === \$_SERVER['HTTP_X_FORWARDED_PROTO'] ) {
-    \$_SERVER['HTTPS'] = 'on';
-}
-PHPSHIM
-)"
-        # Insert shim before the "stop editing" sentinel
-        sed -i "s|/\* That's all, stop editing!|${shim}\n\n/* That's all, stop editing!|" \
-            "${web_root}/wp-config.php"
+        python3 - "${web_root}/wp-config.php" <<'PYEOF'
+import sys
+path = sys.argv[1]
+shim = (
+    "/** X-Forwarded-Proto shim — handles HTTPS behind a reverse proxy */\n"
+    "if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && 'https' === $_SERVER['HTTP_X_FORWARDED_PROTO'] ) {\n"
+    "    $_SERVER['HTTPS'] = 'on';\n"
+    "}\n\n"
+)
+with open(path, 'r') as f:
+    content = f.read()
+sentinel = "/* That's all, stop editing!"
+content = content.replace(sentinel, shim + sentinel, 1)
+with open(path, 'w') as f:
+    f.write(content)
+PYEOF
     fi
 
     log_info "Running WordPress install..."
