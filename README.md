@@ -39,7 +39,7 @@ sudo ./lemp.sh site ssl example.com
 
 | Command | Description |
 |---|---|
-| `./lemp.sh php switch 8.4` | Switch active PHP-FPM version |
+| `./lemp.sh php switch 8.5` | Switch active PHP-FPM version |
 
 `php switch` will:
 1. Detect all `php<old>-*` packages and install their `php<new>-*` equivalents
@@ -81,7 +81,7 @@ sudo ./lemp.sh site ssl example.com
 Edit `lemp.conf`:
 
 ```bash
-PHP_VERSION="8.3"      # 8.2 | 8.3 | 8.4 (via Sury repo)
+PHP_VERSION="8.3"      # 8.2 | 8.3 | 8.4 | 8.5 (via Sury repo)
 WEB_ROOT="/var/www"    # base path for all sites
 BEHIND_PROXY="false"   # set to "true" when a reverse proxy (e.g. Cloudflare Tunnel)
                        # terminates TLS upstream — installs WordPress with https://

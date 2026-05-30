@@ -155,7 +155,7 @@ cmd_php() {
             echo "Usage: ./lemp.sh php <subcommand>"
             echo ""
             echo "Subcommands:"
-            echo "  switch <version>   Switch the active PHP-FPM version (e.g. 8.4)"
+            echo "  switch <version>   Switch the active PHP-FPM version (e.g. 8.5)"
             echo ""
             ;;
     esac
@@ -200,7 +200,7 @@ Site commands:
   site info   <domain>   Show site details
 
 PHP commands:
-  php switch <version>   Switch active PHP-FPM version (e.g. 8.4)
+  php switch <version>   Switch active PHP-FPM version (e.g. 8.5)
                          Mirrors installed extensions, rewrites all nginx
                          vhosts, updates lemp.conf, reloads nginx.
 
@@ -213,7 +213,7 @@ Examples:
   ./lemp.sh site ssl example.com
   ./lemp.sh site list
   ./lemp.sh upgrade php
-  ./lemp.sh php switch 8.4
+  ./lemp.sh php switch 8.5
 
 EOF
 }
