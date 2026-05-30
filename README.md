@@ -35,6 +35,20 @@ sudo ./lemp.sh site ssl example.com
 | `./lemp.sh site info example.com` | Show credentials & paths |
 | `./lemp.sh site remove example.com` | Remove site, DB, and files |
 
+## PHP commands
+
+| Command | Description |
+|---|---|
+| `./lemp.sh php switch 8.4` | Switch active PHP-FPM version |
+
+`php switch` will:
+1. Detect all `php<old>-*` packages and install their `php<new>-*` equivalents
+2. Apply lemp-manager PHP/OPcache tuning for the new version
+3. Rewrite every vhost in `/etc/nginx/sites-available/` to use the new FPM socket
+4. Update `PHP_VERSION` in `lemp.conf`
+5. Test and reload nginx
+6. Optionally stop and disable the old PHP-FPM service
+
 ## What `site create` does
 
 1. DNS pre-check (warns if A record not set, doesn't block)
@@ -61,20 +75,6 @@ sudo ./lemp.sh site ssl example.com
 | `redis` | redis-server | Unix socket, 128MB limit, allkeys-lru |
 | `certbot` | certbot + nginx plugin | Auto-renewal via systemd timer |
 | `firewall` | ufw + fail2ban | Ports 22/80/443; WP login brute force jail |
-
-## PHP commands
-
-| Command | Description |
-|---|---|
-| `./lemp.sh php switch 8.4` | Switch active PHP-FPM version |
-
-`php switch` will:
-1. Detect all `php<old>-*` packages and install their `php<new>-*` equivalents
-2. Apply lemp-manager PHP/OPcache tuning for the new version
-3. Rewrite every vhost in `/etc/nginx/sites-available/` to use the new FPM socket
-4. Update `PHP_VERSION` in `lemp.conf`
-5. Test and reload nginx
-6. Optionally stop and disable the old PHP-FPM service
 
 ## Configuration
 
