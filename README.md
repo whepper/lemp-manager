@@ -8,6 +8,7 @@ Modular LEMP stack installer and WordPress site manager for **Debian 13**.
 ```bash
 git clone <your-repo>
 cd lemp-manager
+cp lemp.conf.example lemp.conf   # edit before running install
 chmod +x lemp.sh
 sudo ./lemp.sh install
 sudo ./lemp.sh site create example.com
@@ -75,38 +76,47 @@ sudo ./lemp.sh site ssl example.com
 | `redis` | redis-server | Unix socket, 128MB limit, allkeys-lru |
 | `certbot` | certbot + nginx plugin | Auto-renewal via systemd timer |
 | `firewall` | ufw + fail2ban | Ports 22/80/443; WP login brute force jail |
+| `cloudflare` | — | Fetches live Cloudflare IP ranges, writes nginx real-IP config, installs weekly refresh timer. Auto-installed when `BEHIND_PROXY=true`. |
 
 ## Configuration
 
-Edit `lemp.conf`:
+`lemp.conf` is gitignored and not committed. Copy the example and edit before running `lemp install`:
 
 ```bash
-PHP_VERSION="8.3"      # 8.2 | 8.3 | 8.4 | 8.5 (via Sury repo)
+cp lemp.conf.example lemp.conf
+```
+
+```bash
+PHP_VERSION="8.4"      # 8.2 | 8.3 | 8.4 | 8.5 (via Sury repo)
 WEB_ROOT="/var/www"    # base path for all sites
-BEHIND_PROXY="false"   # set to "true" when a reverse proxy (e.g. Cloudflare Tunnel)
-                       # terminates TLS upstream — installs WordPress with https://
-                       # URLs and injects an X-Forwarded-Proto shim into wp-config.php
-                       # to prevent redirect loops
+BEHIND_PROXY="false"   # set true when a TLS-terminating reverse proxy (e.g. Cloudflare
+                       # Tunnel) sits in front — installs WordPress with https:// URLs,
+                       # injects an X-Forwarded-Proto shim into wp-config.php, and
+                       # auto-installs the cloudflare module
+CLOUDFLARED_IP=""      # IP of the cloudflared container/host — nginx must trust this
+                       # hop to read CF-Connecting-IP correctly (required when BEHIND_PROXY=true)
 ```
 
 ## Architecture
 
 ```
 lemp-manager/
-├── lemp.sh          # Entry point & dispatcher
-├── site.sh          # Multi-site WordPress orchestration
-├── lemp.conf        # User configuration
+├── lemp.sh              # Entry point & dispatcher
+├── site.sh              # Multi-site WordPress orchestration
+├── lemp.conf            # User config — gitignored, not committed
+├── lemp.conf.example    # Config template — copy to lemp.conf and edit
 ├── lib/
-│   ├── core.sh      # Logging, state, package helpers, DNS check
-│   └── ui.sh        # Terminal output
+│   ├── core.sh          # Logging, state, package helpers, DNS check
+│   └── ui.sh            # Terminal output
 └── modules/
-    ├── nginx.sh      # Nginx + per-site vhost management
-    ├── mariadb.sh    # MariaDB + per-site DB provisioning
-    ├── php.sh        # PHP-FPM (shared pool, WordPress tuned)
-    ├── redis.sh      # Redis (Unix socket, shared instance)
-    ├── certbot.sh    # Let's Encrypt per-site SSL
-    ├── firewall.sh   # UFW + fail2ban (WordPress + SSH jails)
-    └── wordpress.sh  # WP-CLI download, install, Redis plugin
+    ├── nginx.sh          # Nginx + per-site vhost management
+    ├── mariadb.sh        # MariaDB + per-site DB provisioning
+    ├── php.sh            # PHP-FPM (shared pool, WordPress tuned)
+    ├── redis.sh          # Redis (Unix socket, shared instance)
+    ├── certbot.sh        # Let's Encrypt per-site SSL
+    ├── firewall.sh       # UFW + fail2ban (WordPress + SSH jails)
+    ├── cloudflare.sh     # Cloudflare real-IP config + weekly IP refresh timer
+    └── wordpress.sh      # WP-CLI download, install, Redis plugin
 ```
 
 ## State
