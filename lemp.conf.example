@@ -7,12 +7,12 @@ PHP_VERSION="8.4"
 # Web root for all sites. Sites live at $WEB_ROOT/$domain
 WEB_ROOT="/var/www"
 
-# Set true when the server sits behind a TLS-terminating reverse proxy
-# (e.g. Cloudflare Tunnel). WordPress sites install with https:// URLs
-# and wp-config.php gets an X-Forwarded-Proto shim to avoid redirect loops.
-# The cloudflare module is installed automatically when this is true.
+# Set true when the server sits behind any TLS-terminating reverse proxy
+# (Cloudflare Tunnel, Traefik, nginx proxy manager, etc.).
+# WordPress sites install with https:// URLs and wp-config.php gets an
+# X-Forwarded-Proto shim to avoid redirect loops.
 BEHIND_PROXY="false"
 
-# IP of the cloudflared container or host that proxies traffic to nginx.
-# Required when BEHIND_PROXY=true — nginx must trust this IP to read CF-Connecting-IP.
-CLOUDFLARED_IP=""
+# IP of the reverse proxy (e.g. Cloudflare Tunnel container, Traefik, nginx proxy manager).
+# Required when BEHIND_PROXY=true — nginx must trust this IP to read the forwarded header.
+PROXY_IP=""

@@ -64,7 +64,7 @@ sudo ./lemp.sh site ssl example.com
 
 > If `BEHIND_PROXY="true"` in `lemp.conf`, the site URL is set to `https://` and an
 > X-Forwarded-Proto → HTTPS shim is written into `wp-config.php` so WordPress works
-> correctly behind a Cloudflare Tunnel or other TLS-terminating reverse proxy.
+> correctly behind any TLS-terminating reverse proxy.
 
 ## Modules
 
@@ -76,7 +76,7 @@ sudo ./lemp.sh site ssl example.com
 | `redis` | redis-server | Unix socket, 128MB limit, allkeys-lru |
 | `certbot` | certbot + nginx plugin | Auto-renewal via systemd timer |
 | `firewall` | ufw + fail2ban | Ports 22/80/443; WP login brute force jail |
-| `cloudflare` | — | Fetches live Cloudflare IP ranges, writes nginx real-IP config, installs weekly refresh timer. Auto-installed when `BEHIND_PROXY=true`. |
+| `cloudflare` | — | Fetches live Cloudflare IP ranges, writes nginx real-IP config, installs weekly refresh timer. Explicit opt-in: `lemp install cloudflare`. Requires `PROXY_IP` to be set. |
 
 ## Configuration
 
@@ -89,12 +89,12 @@ cp lemp.conf.example lemp.conf
 ```bash
 PHP_VERSION="8.4"      # 8.2 | 8.3 | 8.4 | 8.5 (via Sury repo)
 WEB_ROOT="/var/www"    # base path for all sites
-BEHIND_PROXY="false"   # set true when a TLS-terminating reverse proxy (e.g. Cloudflare
-                       # Tunnel) sits in front — installs WordPress with https:// URLs,
-                       # injects an X-Forwarded-Proto shim into wp-config.php, and
-                       # auto-installs the cloudflare module
-CLOUDFLARED_IP=""      # IP of the cloudflared container/host — nginx must trust this
-                       # hop to read CF-Connecting-IP correctly (required when BEHIND_PROXY=true)
+BEHIND_PROXY="false"   # set true when any TLS-terminating reverse proxy sits in front
+                       # (Cloudflare Tunnel, Traefik, nginx proxy manager, etc.) —
+                       # installs WordPress with https:// URLs and injects an
+                       # X-Forwarded-Proto shim into wp-config.php
+PROXY_IP=""            # IP of the reverse proxy — nginx must trust this hop to read
+                       # the forwarded header (required when using the cloudflare module)
 ```
 
 ## Architecture
