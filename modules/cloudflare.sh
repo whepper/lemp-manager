@@ -142,10 +142,9 @@ lines = [
 ]
 for cidr in cidrs:
     lines.append(f'set_real_ip_from {cidr};')
-lines += ['', 'real_ip_header CF-Connecting-IP;', 'real_ip_recursive on;', '']
 
 with open(conf_path, 'w') as f:
-    f.write('\n'.join(lines))
+    f.write('\n'.join(lines) + '\n')
 
 print(f'Written {len(cidrs)} IP ranges to {conf_path}')
 PYEOF
@@ -153,6 +152,8 @@ PYEOF
 if [[ -n "${CLOUDFLARED_IP:-}" ]]; then
     echo "set_real_ip_from ${CLOUDFLARED_IP}; # cloudflared container" >> "${CF_CONF}"
 fi
+
+printf '\nreal_ip_header CF-Connecting-IP;\nreal_ip_recursive on;\n' >> "${CF_CONF}"
 
 nginx -t && systemctl reload nginx
 SCRIPT
