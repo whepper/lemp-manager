@@ -20,8 +20,14 @@ CONFIG_FILE="${SCRIPT_DIR}/lemp.conf"
 source "${LIB_DIR}/core.sh"
 source "${LIB_DIR}/ui.sh"
 
-# Load user config if present
-[[ -f "${CONFIG_FILE}" ]] && source "${CONFIG_FILE}"
+# Require lemp.conf — exit with a helpful message if missing
+if [[ ! -f "${CONFIG_FILE}" ]]; then
+    echo "ERROR: ${CONFIG_FILE} not found."
+    echo "Copy the example and edit it before running lemp:"
+    echo "  cp ${SCRIPT_DIR}/lemp.conf.example ${CONFIG_FILE}"
+    exit 1
+fi
+source "${CONFIG_FILE}"
 
 # Default config values (overridable in lemp.conf)
 PHP_VERSION="${PHP_VERSION:-8.3}"
