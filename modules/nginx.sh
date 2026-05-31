@@ -17,6 +17,12 @@ module_install_nginx() {
 
     service_enable_start nginx
     log_info "Nginx installed."
+
+    if [[ "${BEHIND_PROXY:-false}" == "true" ]]; then
+        log_info "BEHIND_PROXY=true — installing Cloudflare real-IP module..."
+        load_module cloudflare
+        module_install_cloudflare
+    fi
 }
 
 module_remove_nginx() {
