@@ -30,7 +30,7 @@ INSTALL_PHPMYADMIN="${INSTALL_PHPMYADMIN:-false}"
 WEB_ROOT="${WEB_ROOT:-/var/www}"
 
 # Available modules (order matters for install/remove)
-MODULES=(nginx mariadb php redis certbot firewall)
+MODULES=(nginx mariadb php redis certbot firewall cloudflare)
 
 # =============================================================================
 # Commands
@@ -206,6 +206,7 @@ PHP commands:
 
 Modules:
   nginx, mariadb, php, redis, certbot, firewall
+  cloudflare  (optional; auto-activated by nginx when BEHIND_PROXY=true)
 
 Examples:
   ./lemp.sh install
