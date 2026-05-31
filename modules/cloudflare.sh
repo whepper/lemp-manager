@@ -99,6 +99,13 @@ _cloudflare_write_update_script() {
 # lemp-cloudflare-update — fetch Cloudflare IPs, write nginx conf, reload nginx
 set -euo pipefail
 
+# Load lemp-manager config for CLOUDFLARED_IP
+LEMP_CONF="/opt/lemp-manager/lemp.conf"
+CLOUDFLARED_IP=""
+if [[ -f "${LEMP_CONF}" ]]; then
+    source "${LEMP_CONF}"
+fi
+
 CF_CONF="/etc/nginx/conf.d/cloudflare-realip.conf"
 CF_API="https://api.cloudflare.com/client/v4/ips"
 
@@ -140,6 +147,10 @@ with open(conf_path, 'w') as f:
 
 print(f'Written {len(cidrs)} IP ranges to {conf_path}')
 PYEOF
+
+if [[ -n "${CLOUDFLARED_IP:-}" ]]; then
+    echo "set_real_ip_from ${CLOUDFLARED_IP}; # cloudflared container" >> "${CF_CONF}"
+fi
 
 nginx -t && systemctl reload nginx
 SCRIPT
