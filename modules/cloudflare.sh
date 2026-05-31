@@ -101,9 +101,9 @@ _cloudflare_write_update_script() {
 # lemp-cloudflare-update — fetch Cloudflare IPs, write nginx conf, reload nginx
 set -euo pipefail
 
-# Load lemp-manager config for CLOUDFLARED_IP
+# Load lemp-manager config for PROXY_IP
 LEMP_CONF="/opt/lemp-manager/lemp.conf"
-CLOUDFLARED_IP=""
+PROXY_IP=""
 if [[ -f "${LEMP_CONF}" ]]; then
     source "${LEMP_CONF}"
 fi
@@ -149,8 +149,8 @@ with open(conf_path, 'w') as f:
 print(f'Written {len(cidrs)} IP ranges to {conf_path}')
 PYEOF
 
-if [[ -n "${CLOUDFLARED_IP:-}" ]]; then
-    echo "set_real_ip_from ${CLOUDFLARED_IP}; # cloudflared container" >> "${CF_CONF}"
+if [[ -n "${PROXY_IP:-}" ]]; then
+    echo "set_real_ip_from ${PROXY_IP}; # reverse proxy" >> "${CF_CONF}"
 fi
 
 printf '\nreal_ip_header CF-Connecting-IP;\nreal_ip_recursive on;\n' >> "${CF_CONF}"
