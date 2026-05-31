@@ -60,6 +60,8 @@ module_remove_cloudflare() {
 
 module_upgrade_cloudflare() {
     log_info "Refreshing Cloudflare IP ranges..."
+    _cloudflare_write_update_script
+    chmod +x "${CF_UPDATE_SCRIPT}"
     "${CF_UPDATE_SCRIPT}"
     log_success "Cloudflare IP ranges updated."
 }
